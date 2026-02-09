@@ -1,15 +1,15 @@
-import {EMAIL_VERIFICATION_DISABLED, ENCRYPTION_KEY} from "@/lib/constants";
-import {symmetricDecrypt, symmetricEncrypt} from "@/lib/crypto";
-import {verifyToken} from "@/lib/jwt";
-import {createUser, getUserByEmail, updateUser, updateUserLastLoginAt} from "@/modules/auth/lib/user";
-import {verifyPassword} from "@/modules/auth/lib/utils";
-import type {Account, NextAuthOptions} from "next-auth";
+import { EMAIL_VERIFICATION_DISABLED, ENCRYPTION_KEY } from "@/lib/constants";
+import { symmetricDecrypt, symmetricEncrypt } from "@/lib/crypto";
+import { verifyToken } from "@/lib/jwt";
+import { createUser, getUserByEmail, updateUser, updateUserLastLoginAt } from "@/modules/auth/lib/user";
+import { verifyPassword } from "@/modules/auth/lib/utils";
+import type { Account, NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import {prisma} from "@formbricks/database";
-import {logger} from "@formbricks/logger";
-import {TUser} from "@formbricks/types/user";
-import {createBrevoCustomer} from "./brevo";
-import {z} from "zod";
+import { prisma } from "@formbricks/database";
+import { logger } from "@formbricks/logger";
+import { TUser } from "@formbricks/types/user";
+import { createBrevoCustomer } from "./brevo";
+import { z } from "zod";
 import crypto from 'crypto';
 
 export const authOptions: NextAuthOptions = {
@@ -33,18 +33,14 @@ export const authOptions: NextAuthOptions = {
                     type: "password",
                     placeholder: "Your password",
                 },
-                totpCode: {label: "Two-factor Code", type: "input", placeholder: "Code from authenticator app"},
-                backupCode: {label: "Backup Code", type: "input", placeholder: "Two-factor backup code"},
+                totpCode: { label: "Two-factor Code", type: "input", placeholder: "Code from authenticator app" },
+                backupCode: { label: "Backup Code", type: "input", placeholder: "Two-factor backup code" },
             },
             async authorize(credentials, _req) {
                 if (!_req.headers)
                     throw new Error("Invalid request headers");
 
                 if (_req.headers['x-auth-request-user']) {
-                    if (!_req.headers['x-auth-request-groups'].toString().split(',').includes('role:organization')) {
-                        throw new Error("Unauthorized");
-                    }
-
                     let user;
                     try {
                         user = await prisma.user.findUnique({
@@ -234,7 +230,7 @@ export const authOptions: NextAuthOptions = {
                     if (!credentials?.token) {
                         throw new Error("Token not found");
                     }
-                    const {id} = await verifyToken(credentials?.token);
+                    const { id } = await verifyToken(credentials?.token);
                     user = await prisma.user.findUnique({
                         where: {
                             id: id,
@@ -256,10 +252,10 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("Your account is currently inactive. Please contact the organization admin.");
                 }
 
-                user = await updateUser(user.id, {emailVerified: new Date()});
+                user = await updateUser(user.id, { emailVerified: new Date() });
 
                 // send new user to brevo after email verification
-                createBrevoCustomer({id: user.id, email: user.email});
+                createBrevoCustomer({ id: user.id, email: user.email });
 
                 return user;
             },
@@ -269,7 +265,7 @@ export const authOptions: NextAuthOptions = {
         maxAge: 3600,
     },
     callbacks: {
-        async jwt({token}) {
+        async jwt({ token }) {
             const existingUser = await getUserByEmail(token?.email!);
 
             if (!existingUser) {
@@ -278,11 +274,11 @@ export const authOptions: NextAuthOptions = {
 
             return {
                 ...token,
-                profile: {id: existingUser.id},
+                profile: { id: existingUser.id },
                 isActive: existingUser.isActive,
             };
         },
-        async session({session, token}) {
+        async session({ session, token }) {
             // @ts-expect-error
             session.user.id = token?.id;
             // @ts-expect-error
@@ -292,7 +288,7 @@ export const authOptions: NextAuthOptions = {
 
             return session;
         },
-        async signIn({user, account}: { user: TUser; account: Account }) {
+        async signIn({ user, account }: { user: TUser; account: Account }) {
             //const cookieStore = await cookies();
 
             //const callbackUrl = cookieStore.get("next-auth.callback-url")?.value || "";
