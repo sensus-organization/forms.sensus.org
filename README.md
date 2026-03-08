@@ -1,11 +1,16 @@
 This is a fork of [Formbricks](https://github.com/formbricks/formbricks), licensed under the GNU AGPLv3.
 Modifications include:
-- removal of Enterprise features (whole apps/web/modules/ee directory) and adapting code to work without it 
-- change of branding
-- simple mechanism to consume authentication headers from oauth2proxy and automatically create/login to account indicated by external IdP
-- UI changes related to permission management (e.g. non-owners won't see sidebar, some top bar icons are hidden etc.)
-- removal of survey template list
-- updated database migration script to allow use of non-superuser account
+- Removal of Enterprise features (whole `apps/web/modules/ee` directory) and adapting code to work without it
+- Removal of demo apps and React Native SDK
+- Change of branding (logos, colors, email templates) to SensUs
+- OAuth2 Proxy header-based auto-login: consumes `X-Auth-Request-*` headers to automatically create/login accounts from an external IdP
+- Shared secret validation (`OAUTH2_PROXY_SHARED_SECRET`) between Traefik and the app as defense-in-depth against header spoofing
+- UI changes for permission management (non-owners don't see sidebar, some top bar icons are hidden, etc.)
+- Removal of survey template list
+- AGPLv3 source link in legal footer on all public survey pages
+- Updated database migration script to allow use of non-superuser account
+- Next.js upgraded to 15.2.9 (CVE-2025-55182 patch)
+- CI/CD replaced with single Docker build + push to GHCR
 
 ---
 
