@@ -3,6 +3,7 @@
 import { cn } from "@/lib/cn";
 import { getFormattedErrorMessage } from "@/lib/utils/helper";
 import { validateSurveyPinAction } from "@/modules/survey/link/actions";
+import { LegalFooter } from "@/modules/survey/link/components/legal-footer";
 import { LinkSurvey } from "@/modules/survey/link/components/link-survey";
 import { OTPInput } from "@/modules/ui/components/otp-input";
 import { Project, Response } from "@prisma/client";
@@ -94,22 +95,30 @@ export const PinScreen = (props: PinScreenProps) => {
 
   if (!survey) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
-        <div className="flex flex-col items-center justify-center">
-          <div className="my-4 font-semibold">
-            <h4>{t("s.enter_pin")}</h4>
+      <>
+        <div className="flex h-full w-full items-center justify-center">
+          <div className="flex flex-col items-center justify-center">
+            <div className="my-4 font-semibold">
+              <h4>{t("s.enter_pin")}</h4>
+            </div>
+            <OTPInput
+              disabled={Boolean(error) || loading}
+              value={localPinEntry}
+              onChange={(value) => {
+                setLocalPinEntry(value);
+              }}
+              valueLength={4}
+              inputBoxClassName={cn({ "border-red-400": Boolean(error) })}
+            />
           </div>
-          <OTPInput
-            disabled={Boolean(error) || loading}
-            value={localPinEntry}
-            onChange={(value) => {
-              setLocalPinEntry(value);
-            }}
-            valueLength={4}
-            inputBoxClassName={cn({ "border-red-400": Boolean(error) })}
-          />
         </div>
-      </div>
+        <LegalFooter
+          IMPRINT_URL={IMPRINT_URL}
+          PRIVACY_URL={PRIVACY_URL}
+          IS_FORMBRICKS_CLOUD={IS_FORMBRICKS_CLOUD}
+          surveyUrl={surveyDomain + "/s/" + surveyId}
+        />
+      </>
     );
   }
 

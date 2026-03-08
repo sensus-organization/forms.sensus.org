@@ -4,6 +4,7 @@ import { findMatchingLocale } from "@/lib/utils/locale";
 import { getOrganizationIdFromEnvironmentId } from "@/modules/survey/lib/organization";
 import { getResponseCountBySurveyId } from "@/modules/survey/lib/response";
 import { getOrganizationBilling } from "@/modules/survey/lib/survey";
+import { LegalFooter } from "@/modules/survey/link/components/legal-footer";
 import { LinkSurvey } from "@/modules/survey/link/components/link-survey";
 import { PinScreen } from "@/modules/survey/link/components/pin-screen";
 import { SurveyInactive } from "@/modules/survey/link/components/survey-inactive";
@@ -52,10 +53,18 @@ export const renderSurvey = async ({
 
   if (survey.status !== "inProgress" && !isPreview) {
     return (
-      <SurveyInactive
-        status={survey.status}
-        surveyClosedMessage={survey.surveyClosedMessage ? survey.surveyClosedMessage : undefined}
-      />
+      <>
+        <SurveyInactive
+          status={survey.status}
+          surveyClosedMessage={survey.surveyClosedMessage ? survey.surveyClosedMessage : undefined}
+        />
+        <LegalFooter
+          IMPRINT_URL={IMPRINT_URL}
+          PRIVACY_URL={PRIVACY_URL}
+          IS_FORMBRICKS_CLOUD={IS_FORMBRICKS_CLOUD}
+          surveyUrl={getSurveyDomain() + "/s/" + survey.id}
+        />
+      </>
     );
   }
 

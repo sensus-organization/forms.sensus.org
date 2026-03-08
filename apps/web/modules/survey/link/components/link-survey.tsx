@@ -1,5 +1,6 @@
 "use client";
 
+import { LegalFooter } from "@/modules/survey/link/components/legal-footer";
 import { LinkSurveyWrapper } from "@/modules/survey/link/components/link-survey-wrapper";
 import { SurveyLinkUsed } from "@/modules/survey/link/components/survey-link-used";
 import { VerifyEmail } from "@/modules/survey/link/components/verify-email";
@@ -116,30 +117,55 @@ export const LinkSurvey = ({
   }, [survey.isVerifyEmailEnabled, verifiedEmail]);
 
   if (hasFinishedSingleUseResponse) {
-    return <SurveyLinkUsed singleUseMessage={survey.singleUse} />;
+    return (
+      <>
+        <SurveyLinkUsed singleUseMessage={survey.singleUse} />
+        <LegalFooter
+          IMPRINT_URL={IMPRINT_URL}
+          PRIVACY_URL={PRIVACY_URL}
+          IS_FORMBRICKS_CLOUD={IS_FORMBRICKS_CLOUD}
+          surveyUrl={surveyDomain + "/s/" + survey.id}
+        />
+      </>
+    );
   }
 
   if (survey.isVerifyEmailEnabled && emailVerificationStatus !== "verified") {
     if (emailVerificationStatus === "fishy") {
       return (
+        <>
+          <VerifyEmail
+            survey={survey}
+            isErrorComponent={true}
+            languageCode={languageCode}
+            styling={project.styling}
+            locale={locale}
+          />
+          <LegalFooter
+            IMPRINT_URL={IMPRINT_URL}
+            PRIVACY_URL={PRIVACY_URL}
+            IS_FORMBRICKS_CLOUD={IS_FORMBRICKS_CLOUD}
+            surveyUrl={surveyDomain + "/s/" + survey.id}
+          />
+        </>
+      );
+    }
+    return (
+      <>
         <VerifyEmail
+          singleUseId={suId ?? ""}
           survey={survey}
-          isErrorComponent={true}
           languageCode={languageCode}
           styling={project.styling}
           locale={locale}
         />
-      );
-    }
-    //emailVerificationStatus === "not-verified"
-    return (
-      <VerifyEmail
-        singleUseId={suId ?? ""}
-        survey={survey}
-        languageCode={languageCode}
-        styling={project.styling}
-        locale={locale}
-      />
+        <LegalFooter
+          IMPRINT_URL={IMPRINT_URL}
+          PRIVACY_URL={PRIVACY_URL}
+          IS_FORMBRICKS_CLOUD={IS_FORMBRICKS_CLOUD}
+          surveyUrl={surveyDomain + "/s/" + survey.id}
+        />
+      </>
     );
   }
 
