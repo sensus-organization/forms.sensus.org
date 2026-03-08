@@ -1,4 +1,4 @@
-import { EMAIL_VERIFICATION_DISABLED, ENCRYPTION_KEY } from "@/lib/constants";
+import { EMAIL_VERIFICATION_DISABLED, ENCRYPTION_KEY, OAUTH2_PROXY_SHARED_SECRET } from "@/lib/constants";
 import { symmetricDecrypt, symmetricEncrypt } from "@/lib/crypto";
 import { verifyToken } from "@/lib/jwt";
 import { createUser, getUserByEmail, updateUser, updateUserLastLoginAt } from "@/modules/auth/lib/user";
@@ -41,6 +41,8 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("Invalid request headers");
 
                 if (_req.headers['x-auth-request-user']) {
+                    if (OAUTH2_PROXY_SHARED_SECRET && _req.headers['x-proxy-secret'] !== OAUTH2_PROXY_SHARED_SECRET)
+                        throw new Error("Invalid proxy secret");
                     let user;
                     try {
                         user = await prisma.user.findUnique({

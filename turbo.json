@@ -197,7 +197,8 @@
         "UNKEY_ROOT_KEY",
         "PROMETHEUS_ENABLED",
         "PROMETHEUS_EXPORTER_PORT",
-        "DISABLE_USER_MANAGEMENT"
+        "DISABLE_USER_MANAGEMENT",
+        "OAUTH2_PROXY_SHARED_SECRET"
       ],
       "outputs": ["dist/**", ".next/**"]
     },

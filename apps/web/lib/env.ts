@@ -111,6 +111,7 @@ export const env = createEnv({
     PROMETHEUS_EXPORTER_PORT: z.string().optional(),
     PROMETHEUS_ENABLED: z.enum(["1", "0"]).optional(),
     DISABLE_USER_MANAGEMENT: z.enum(["1", "0"]).optional(),
+    OAUTH2_PROXY_SHARED_SECRET: z.string().min(32).optional(),
   },
 
   /*
@@ -208,5 +209,6 @@ export const env = createEnv({
     PROMETHEUS_ENABLED: process.env.PROMETHEUS_ENABLED,
     PROMETHEUS_EXPORTER_PORT: process.env.PROMETHEUS_EXPORTER_PORT,
     DISABLE_USER_MANAGEMENT: process.env.DISABLE_USER_MANAGEMENT,
+    OAUTH2_PROXY_SHARED_SECRET: process.env.OAUTH2_PROXY_SHARED_SECRET,
   },
 });
