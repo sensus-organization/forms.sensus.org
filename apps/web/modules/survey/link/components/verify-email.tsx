@@ -1,6 +1,5 @@
 "use client";
 
-import { getLocalizedValue } from "@/lib/i18n/utils";
 import { getFormattedErrorMessage } from "@/lib/utils/helper";
 import { replaceHeadlineRecall } from "@/lib/utils/recall";
 import { isSurveyResponsePresentAction, sendLinkSurveyEmailAction } from "@/modules/survey/link/actions";
@@ -10,7 +9,7 @@ import { Input } from "@/modules/ui/components/input";
 import { StackedCardsContainer } from "@/modules/ui/components/stacked-cards-container";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslate } from "@tolgee/react";
-import { ArrowLeft, MailIcon } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { Toaster, toast } from "react-hot-toast";
@@ -22,7 +21,6 @@ interface VerifyEmailProps {
   survey: TSurvey;
   isErrorComponent?: boolean;
   singleUseId?: string;
-  languageCode: string;
   styling: TProjectStyling;
   locale: string;
 }
@@ -36,7 +34,6 @@ export const VerifyEmail = ({
   survey,
   isErrorComponent,
   singleUseId,
-  languageCode,
   styling,
   locale,
 }: VerifyEmailProps) => {
@@ -52,7 +49,6 @@ export const VerifyEmail = ({
   }, [survey]);
 
   const { isSubmitting } = form.formState;
-  const [showPreviewQuestions, setShowPreviewQuestions] = useState(false);
   const [emailSent, setEmailSent] = useState<boolean>(false);
 
   const submitEmail = async (emailInput: TVerifyEmailInput) => {
@@ -88,12 +84,7 @@ export const VerifyEmail = ({
     }
   };
 
-  const handlePreviewClick = () => {
-    setShowPreviewQuestions(!showPreviewQuestions);
-  };
-
   const handleGoBackClick = () => {
-    setShowPreviewQuestions(false);
     setEmailSent(false);
   };
 
@@ -124,11 +115,9 @@ export const VerifyEmail = ({
               e.preventDefault();
               await form.handleSubmit(submitEmail)(e);
             }}>
-            {!emailSent && !showPreviewQuestions && (
+            {!emailSent && (
               <div className="flex flex-col">
-                <div className="mx-auto rounded-full border bg-slate-200 p-6">
-                  <MailIcon strokeWidth={1.5} className="mx-auto h-12 w-12 text-white" />
-                </div>
+                <img src="https://cdn.sensus.org/branding/logo-rgb.svg" alt="SensUs" className="mx-auto h-16" />
                 <p className="mt-8 text-2xl font-bold lg:text-4xl">{t("s.verify_email_before_submission")}</p>
                 <p className="mt-4 text-sm text-slate-500 lg:text-base">
                   {t("s.verify_email_before_submission_description")}
@@ -160,28 +149,10 @@ export const VerifyEmail = ({
                     </FormItem>
                   )}
                 />
-                <Button variant="ghost" className="mt-6" onClick={handlePreviewClick}>
-                  {t("s.just_curious")} <span>{t("s.preview_survey_questions")}</span>
-                </Button>
               </div>
             )}
           </form>
         </FormProvider>
-        {!emailSent && showPreviewQuestions && (
-          <div>
-            <p className="text-2xl font-bold">{t("s.question_preview")}</p>
-            <div className="bg-opacity-20 mt-4 flex w-full flex-col justify-center rounded-lg border border-slate-200 bg-slate-50 p-8 text-slate-700">
-              {localSurvey.questions.map((question, index) => (
-                <p
-                  key={index}
-                  className="my-1 text-sm">{`${(index + 1).toString()}. ${getLocalizedValue(question.headline, languageCode)}`}</p>
-              ))}
-            </div>
-            <Button variant="ghost" className="mt-6" onClick={handlePreviewClick}>
-              {t("s.want_to_respond")} <span>{t("s.verify_email")}</span>
-            </Button>
-          </div>
-        )}
         {emailSent && (
           <div>
             <h1 className="mt-8 text-2xl font-bold lg:text-4xl">

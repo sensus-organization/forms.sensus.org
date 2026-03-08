@@ -137,7 +137,6 @@ export const LinkSurvey = ({
           <VerifyEmail
             survey={survey}
             isErrorComponent={true}
-            languageCode={languageCode}
             styling={project.styling}
             locale={locale}
           />
@@ -155,7 +154,6 @@ export const LinkSurvey = ({
         <VerifyEmail
           singleUseId={suId ?? ""}
           survey={survey}
-          languageCode={languageCode}
           styling={project.styling}
           locale={locale}
         />
