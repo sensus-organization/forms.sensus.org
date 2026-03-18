@@ -47,7 +47,7 @@ const ResponseFilterProvider = ({ children }: { children: React.ReactNode }) => 
   // state holds the filter selected value
   const [selectedFilter, setSelectedFilter] = useState<SelectedFilterValue>({
     filter: [],
-    onlyComplete: false,
+    onlyComplete: true,
   });
   // state holds all the options of the responses fetched
   const [selectedOptions, setSelectedOptions] = useState<SelectedFilterOptions>({
@@ -67,7 +67,7 @@ const ResponseFilterProvider = ({ children }: { children: React.ReactNode }) => 
     });
     setSelectedFilter({
       filter: [],
-      onlyComplete: false,
+      onlyComplete: true,
     });
   }, []);
 

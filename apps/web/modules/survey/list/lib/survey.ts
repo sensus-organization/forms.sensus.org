@@ -34,7 +34,7 @@ export const surveySelect: Prisma.SurveySelect = {
   singleUse: true,
   environmentId: true,
   _count: {
-    select: { responses: true },
+    select: { responses: { where: { finished: true } } },
   },
 };
 

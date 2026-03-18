@@ -646,6 +646,7 @@ export const getResponseCountBySurveyId = reactCache(
           const responseCount = await prisma.response.count({
             where: {
               surveyId: surveyId,
+              finished: true,
               ...buildWhereClause(survey, filterCriteria),
             },
           });
