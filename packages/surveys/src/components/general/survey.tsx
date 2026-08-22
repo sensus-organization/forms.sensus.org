@@ -623,7 +623,9 @@ export function Survey({
               key={question.id}
               surveyId={localSurvey.id}
               question={parseRecallInformation(question, selectedLanguage, responseData, currentVariables)}
+              questions={localSurvey.questions}
               value={responseData[question.id]}
+              responseData={responseData}
               onChange={onChange}
               onSubmit={onSubmit}
               onBack={onBack}

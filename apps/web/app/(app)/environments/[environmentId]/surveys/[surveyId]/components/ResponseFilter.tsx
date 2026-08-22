@@ -201,7 +201,9 @@ export const ResponseFilter = ({ survey }: ResponseFilterProps) => {
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger className="flex min-w-[8rem] items-center justify-between rounded border border-slate-200 bg-white p-3 text-sm text-slate-600 hover:border-slate-300 sm:min-w-[11rem] sm:px-6 sm:py-3">
         <span>
-          Filter <b>{filterValue.filter.length > 0 && `(${filterValue.filter.length})`}</b>
+          Filter
+          {filterValue.onlyComplete && ` · ${t("environments.surveys.summary.only_completed")}`}{" "}
+          <b>{filterValue.filter.length > 0 && `(${filterValue.filter.length})`}</b>
         </span>
         <div className="ml-3">
           {isOpen ? (

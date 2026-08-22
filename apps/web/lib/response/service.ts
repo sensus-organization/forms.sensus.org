@@ -5,7 +5,7 @@ import { cache as reactCache } from "react";
 import { prisma } from "@formbricks/database";
 import { logger } from "@formbricks/logger";
 import { ZId, ZOptionalNumber, ZString } from "@formbricks/types/common";
-import { DatabaseError, ResourceNotFoundError } from "@formbricks/types/errors";
+import { DatabaseError, InvalidInputError, ResourceNotFoundError } from "@formbricks/types/errors";
 import {
   TResponse,
   TResponseContact,
@@ -14,6 +14,7 @@ import {
   ZResponseFilterCriteria,
   ZResponseUpdateInput,
 } from "@formbricks/types/responses";
+import { getChoiceExclusionViolations } from "@formbricks/types/surveys/choice-exclusion";
 import { TSurvey, TSurveyQuestionTypeEnum } from "@formbricks/types/surveys/types";
 import { TTag } from "@formbricks/types/tags";
 import { ITEMS_PER_PAGE, WEBAPP_URL } from "../constants";
@@ -497,6 +498,19 @@ export const updateResponse = async (
       ...currentResponse.data,
       ...responseInput.data,
     };
+    const survey = await getSurvey(currentResponse.surveyId);
+    if (!survey) {
+      throw new ResourceNotFoundError("Survey", currentResponse.surveyId);
+    }
+    if (
+      getChoiceExclusionViolations(
+        survey,
+        data as TResponse["data"],
+        responseInput.language ?? currentResponse.language ?? "default"
+      ).length > 0
+    ) {
+      throw new InvalidInputError("Response contains answers excluded by an earlier question");
+    }
     const ttc = responseInput.ttc
       ? responseInput.finished
         ? calculateTtcTotal(responseInput.ttc)

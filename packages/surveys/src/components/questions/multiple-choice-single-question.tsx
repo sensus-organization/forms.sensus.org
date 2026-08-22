@@ -9,11 +9,13 @@ import { getUpdatedTtc, useTtc } from "@/lib/ttc";
 import { cn, getShuffledChoicesIds } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { type TResponseData, type TResponseTtc } from "@formbricks/types/responses";
+import { getChoiceAnswerToken, getChoiceToken } from "@formbricks/types/surveys/choice-exclusion";
 import type { TSurveyMultipleChoiceQuestion, TSurveyQuestionId } from "@formbricks/types/surveys/types";
 
 interface MultipleChoiceSingleProps {
   question: TSurveyMultipleChoiceQuestion;
   value?: string;
+  excludedChoiceTokens?: string[];
   onChange: (responseData: TResponseData) => void;
   onSubmit: (data: TResponseData, ttc: TResponseTtc) => void;
   onBack: () => void;
@@ -30,6 +32,7 @@ interface MultipleChoiceSingleProps {
 export function MultipleChoiceSingleQuestion({
   question,
   value,
+  excludedChoiceTokens = [],
   onChange,
   onSubmit,
   onBack,
@@ -48,6 +51,7 @@ export function MultipleChoiceSingleQuestion({
   const choicesContainerRef = useRef<HTMLDivElement | null>(null);
   const isMediaAvailable = question.imageUrl || question.videoUrl;
   const isCurrent = question.id === currentQuestionId;
+  const excludedChoiceTokenSet = useMemo(() => new Set(excludedChoiceTokens), [excludedChoiceTokens]);
   const shuffledChoicesIds = useMemo(() => {
     if (question.shuffleOption) {
       return getShuffledChoicesIds(question.choices, question.shuffleOption);
@@ -57,6 +61,15 @@ export function MultipleChoiceSingleQuestion({
   }, [question.shuffleOption, question.choices.length, question.choices[question.choices.length - 1].id]);
 
   useTtc(question.id, ttc, setTtc, startTime, setStartTime, question.id === currentQuestionId);
+
+  useEffect(() => {
+    const selectedChoiceToken =
+      value === undefined ? undefined : getChoiceAnswerToken(question, value, languageCode);
+    if (selectedChoiceToken && excludedChoiceTokenSet.has(selectedChoiceToken)) {
+      setOtherSelected(false);
+      onChange({ [question.id]: "" });
+    }
+  }, [excludedChoiceTokenSet, languageCode, onChange, question, value]);
 
   const questionChoices = useMemo(() => {
     if (!question.choices.length) {
@@ -75,6 +88,11 @@ export function MultipleChoiceSingleQuestion({
     () => question.choices.find((choice) => choice.id === "other"),
     [question.choices]
   );
+  const isOtherDisabled = otherOption ? excludedChoiceTokenSet.has(getChoiceToken(otherOption)) : false;
+  const hasEnabledRegularChoice = questionChoices.some(
+    (choice) =>
+      choice !== undefined && choice.id !== "other" && !excludedChoiceTokenSet.has(getChoiceToken(choice))
+  );
 
   useEffect(() => {
     if (isFirstQuestion && !value) {
@@ -88,7 +106,9 @@ export function MultipleChoiceSingleQuestion({
     }
 
     const isOtherSelected =
-      value !== undefined && !questionChoices.some((choice) => choice?.label[languageCode] === value);
+      value !== undefined &&
+      value !== "" &&
+      !questionChoices.some((choice) => choice?.label[languageCode] === value);
     setOtherSelected(isOtherSelected);
   }, [isFirstQuestion, languageCode, otherOption, question.id, questionChoices, value]);
 
@@ -134,26 +154,37 @@ export function MultipleChoiceSingleQuestion({
                 ref={choicesContainerRef}>
                 {questionChoices.map((choice, idx) => {
                   if (!choice || choice.id === "other") return;
+                  const isDisabled = excludedChoiceTokenSet.has(getChoiceToken(choice));
+                  const isFirstEnabledChoice =
+                    questionChoices.findIndex(
+                      (candidate) =>
+                        candidate !== undefined &&
+                        candidate.id !== "other" &&
+                        !excludedChoiceTokenSet.has(getChoiceToken(candidate))
+                    ) === idx;
                   return (
                     <label
                       dir="auto"
                       key={choice.id}
-                      tabIndex={isCurrent ? 0 : -1}
+                      tabIndex={isCurrent && !isDisabled ? 0 : -1}
                       className={cn(
                         value === getLocalizedValue(choice.label, languageCode)
                           ? "fb-border-brand fb-bg-input-bg-selected fb-z-10"
                           : "fb-border-border",
-                        "fb-text-heading fb-bg-input-bg focus-within:fb-border-brand focus-within:fb-bg-input-bg-selected hover:fb-bg-input-bg-selected fb-rounded-custom fb-relative fb-flex fb-cursor-pointer fb-flex-col fb-border fb-p-4 focus:fb-outline-none"
+                        isDisabled
+                          ? "fb-cursor-not-allowed fb-opacity-50"
+                          : "fb-cursor-pointer hover:fb-bg-input-bg-selected",
+                        "fb-text-heading fb-bg-input-bg focus-within:fb-border-brand focus-within:fb-bg-input-bg-selected fb-rounded-custom fb-relative fb-flex fb-flex-col fb-border fb-p-4 focus:fb-outline-none"
                       )}
                       onKeyDown={(e) => {
                         // Accessibility: if spacebar was pressed pass this down to the input
-                        if (e.key === " ") {
+                        if (e.key === " " && !isDisabled) {
                           e.preventDefault();
                           document.getElementById(choice.id)?.click();
                           document.getElementById(choice.id)?.focus();
                         }
                       }}
-                      autoFocus={idx === 0 && autoFocusEnabled}>
+                      autoFocus={isFirstEnabledChoice && autoFocusEnabled}>
                       <span className="fb-flex fb-items-center fb-text-sm">
                         <input
                           tabIndex={-1}
@@ -161,6 +192,7 @@ export function MultipleChoiceSingleQuestion({
                           id={choice.id}
                           name={question.id}
                           value={getLocalizedValue(choice.label, languageCode)}
+                          disabled={isDisabled}
                           dir="auto"
                           className="fb-border-brand fb-text-brand fb-h-4 fb-w-4 fb-border focus:fb-ring-0 focus:fb-ring-offset-0"
                           aria-labelledby={`${choice.id}-label`}
@@ -169,7 +201,7 @@ export function MultipleChoiceSingleQuestion({
                             onChange({ [question.id]: getLocalizedValue(choice.label, languageCode) });
                           }}
                           checked={value === getLocalizedValue(choice.label, languageCode)}
-                          required={question.required ? idx === 0 : undefined}
+                          required={question.required ? isFirstEnabledChoice : undefined}
                         />
                         <span id={`${choice.id}-label`} className="fb-ml-3 fb-mr-3 fb-grow fb-font-medium">
                           {getLocalizedValue(choice.label, languageCode)}
@@ -181,16 +213,19 @@ export function MultipleChoiceSingleQuestion({
                 {otherOption ? (
                   <label
                     dir="auto"
-                    tabIndex={isCurrent ? 0 : -1}
+                    tabIndex={isCurrent && !isOtherDisabled ? 0 : -1}
                     className={cn(
                       value === getLocalizedValue(otherOption.label, languageCode)
                         ? "fb-border-brand fb-bg-input-bg-selected fb-z-10"
                         : "fb-border-border",
-                      "fb-text-heading focus-within:fb-border-brand fb-bg-input-bg focus-within:fb-bg-input-bg-selected hover:fb-bg-input-bg-selected fb-rounded-custom fb-relative fb-flex fb-cursor-pointer fb-flex-col fb-border fb-p-4 focus:fb-outline-none"
+                      isOtherDisabled
+                        ? "fb-cursor-not-allowed fb-opacity-50"
+                        : "fb-cursor-pointer hover:fb-bg-input-bg-selected",
+                      "fb-text-heading focus-within:fb-border-brand fb-bg-input-bg focus-within:fb-bg-input-bg-selected fb-rounded-custom fb-relative fb-flex fb-flex-col fb-border fb-p-4 focus:fb-outline-none"
                     )}
                     onKeyDown={(e) => {
                       // Accessibility: if spacebar was pressed pass this down to the input
-                      if (e.key === " ") {
+                      if (e.key === " " && !isOtherDisabled) {
                         if (otherSelected) return;
                         document.getElementById(otherOption.id)?.click();
                         document.getElementById(otherOption.id)?.focus();
@@ -204,6 +239,7 @@ export function MultipleChoiceSingleQuestion({
                         id={otherOption.id}
                         name={question.id}
                         value={getLocalizedValue(otherOption.label, languageCode)}
+                        disabled={isOtherDisabled}
                         className="fb-border-brand fb-text-brand fb-h-4 fb-w-4 fb-border focus:fb-ring-0 focus:fb-ring-offset-0"
                         aria-labelledby={`${otherOption.id}-label`}
                         onChange={() => {
@@ -211,6 +247,7 @@ export function MultipleChoiceSingleQuestion({
                           onChange({ [question.id]: "" });
                         }}
                         checked={otherSelected}
+                        required={question.required && !hasEnabledRegularChoice}
                       />
                       <span
                         id={`${otherOption.id}-label`}

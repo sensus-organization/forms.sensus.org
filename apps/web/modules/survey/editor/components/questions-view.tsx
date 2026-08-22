@@ -35,6 +35,7 @@ import {
   TSurveyLogic,
   TSurveyLogicAction,
   TSurveyQuestionId,
+  TSurveyQuestionTypeEnum,
 } from "@formbricks/types/surveys/types";
 import { TSurvey, TSurveyQuestion } from "@formbricks/types/surveys/types";
 import { findQuestionsWithCyclicLogic } from "@formbricks/types/surveys/validation";
@@ -281,6 +282,14 @@ export const QuestionsView = ({
           }
         }
       }
+
+      if (
+        question.type === TSurveyQuestionTypeEnum.MultipleChoiceSingle &&
+        question.choiceExclusion?.questionIds.includes(questionId)
+      ) {
+        const questionIds = question.choiceExclusion.questionIds.filter((id) => id !== questionId);
+        question.choiceExclusion = questionIds.length > 0 ? { questionIds } : undefined;
+      }
     });
 
     updatedSurvey.questions.splice(questionIdx, 1);
@@ -354,7 +363,20 @@ export const QuestionsView = ({
     const [reorderedQuestion] = newQuestions.splice(questionIndex, 1);
     const destinationIndex = up ? questionIndex - 1 : questionIndex + 1;
     newQuestions.splice(destinationIndex, 0, reorderedQuestion);
-    const updatedSurvey = { ...localSurvey, questions: newQuestions };
+    const questionIndexes = new Map(newQuestions.map((question, index) => [question.id, index]));
+    const questions = newQuestions.map((question, index) => {
+      if (question.type !== TSurveyQuestionTypeEnum.MultipleChoiceSingle || !question.choiceExclusion) {
+        return question;
+      }
+      const questionIds = question.choiceExclusion.questionIds.filter(
+        (sourceQuestionId) => (questionIndexes.get(sourceQuestionId) ?? Number.POSITIVE_INFINITY) < index
+      );
+      return {
+        ...question,
+        choiceExclusion: questionIds.length > 0 ? { questionIds } : undefined,
+      };
+    });
+    const updatedSurvey = { ...localSurvey, questions };
     setLocalSurvey(updatedSurvey);
   };
 

@@ -589,6 +589,11 @@ export const ZSurveyMultipleChoiceQuestion = ZSurveyQuestionBase.extend({
     .min(2, { message: "Multiple Choice Question must have at least two choices" }),
   shuffleOption: ZShuffleOption.optional(),
   otherOptionPlaceholder: ZI18nString.optional(),
+  choiceExclusion: z
+    .object({
+      questionIds: z.array(ZSurveyQuestionId).min(1),
+    })
+    .optional(),
 });
 
 export type TSurveyMultipleChoiceQuestion = z.infer<typeof ZSurveyMultipleChoiceQuestion>;
@@ -926,6 +931,32 @@ export const ZSurvey = z
 
     // Custom default validation for each question
     questions.forEach((question, questionIndex) => {
+      if (question.type === TSurveyQuestionTypeEnum.MultipleChoiceMulti && question.choiceExclusion) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Choice exclusion is only supported for single-select questions",
+          path: ["questions", questionIndex, "choiceExclusion"],
+        });
+      }
+      if (question.type === TSurveyQuestionTypeEnum.MultipleChoiceSingle && question.choiceExclusion) {
+        question.choiceExclusion.questionIds.forEach((sourceQuestionId) => {
+          const sourceQuestionIndex = questions.findIndex(({ id }) => id === sourceQuestionId);
+          const sourceQuestion = questions[sourceQuestionIndex];
+          if (
+            sourceQuestionIndex < 0 ||
+            sourceQuestionIndex >= questionIndex ||
+            (sourceQuestion.type !== TSurveyQuestionTypeEnum.MultipleChoiceSingle &&
+              sourceQuestion.type !== TSurveyQuestionTypeEnum.MultipleChoiceMulti)
+          ) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Question ${String(questionIndex + 1)} has an invalid choice exclusion source`,
+              path: ["questions", questionIndex, "choiceExclusion", "questionIds"],
+            });
+          }
+        });
+      }
+
       multiLangIssue = validateQuestionLabels("headline", question.headline, languages, questionIndex);
       if (multiLangIssue) {
         ctx.addIssue(multiLangIssue);

@@ -5,6 +5,7 @@ import { QuestionFormInput } from "@/modules/survey/components/question-form-inp
 import { QuestionOptionChoice } from "@/modules/survey/editor/components/question-option-choice";
 import { findOptionUsedInLogic } from "@/modules/survey/editor/lib/utils";
 import { Button } from "@/modules/ui/components/button";
+import { InputCombobox } from "@/modules/ui/components/input-combo-box";
 import { Label } from "@/modules/ui/components/label";
 import { ShuffleOptionSelect } from "@/modules/ui/components/shuffle-option-select";
 import { DndContext } from "@dnd-kit/core";
@@ -54,6 +55,17 @@ export const MultipleChoiceQuestionForm = ({
   const questionRef = useRef<HTMLInputElement>(null);
   const surveyLanguageCodes = extractLanguageCodes(localSurvey.languages);
   const surveyLanguages = localSurvey.languages ?? [];
+  const exclusionSourceOptions = localSurvey.questions
+    .slice(0, questionIdx)
+    .filter(
+      (candidate) =>
+        candidate.type === TSurveyQuestionTypeEnum.MultipleChoiceSingle ||
+        candidate.type === TSurveyQuestionTypeEnum.MultipleChoiceMulti
+    )
+    .map((candidate) => ({
+      label: candidate.headline[selectedLanguageCode] || candidate.headline.default,
+      value: candidate.id,
+    }));
   const shuffleOptionsTypes = {
     none: {
       id: "none",
@@ -302,6 +314,33 @@ export const MultipleChoiceQuestionForm = ({
           </div>
         </div>
       </div>
+      {question.type === TSurveyQuestionTypeEnum.MultipleChoiceSingle &&
+        exclusionSourceOptions.length > 0 && (
+          <div className="mt-3">
+            <Label htmlFor="choice-exclusion">
+              {t("environments.surveys.edit.exclude_answers_from_questions")}
+            </Label>
+            <div className="mt-2">
+              <InputCombobox
+                id="choice-exclusion"
+                options={exclusionSourceOptions}
+                value={question.choiceExclusion?.questionIds ?? []}
+                allowMultiSelect
+                showCheckIcon
+                clearable
+                onChangeValue={(value) => {
+                  const questionIds = Array.isArray(value) ? value : value ? [String(value)] : [];
+                  updateQuestion(questionIdx, {
+                    choiceExclusion: questionIds.length > 0 ? { questionIds } : undefined,
+                  });
+                }}
+              />
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              {t("environments.surveys.edit.exclude_answers_from_questions_description")}
+            </p>
+          </div>
+        )}
     </form>
   );
 };

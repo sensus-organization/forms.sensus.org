@@ -9,6 +9,7 @@ import { logger } from "@formbricks/logger";
 import { ZId } from "@formbricks/types/common";
 import { InvalidInputError } from "@formbricks/types/errors";
 import { TResponse } from "@formbricks/types/responses";
+import { getChoiceExclusionViolations } from "@formbricks/types/surveys/choice-exclusion";
 import { createResponse } from "./lib/response";
 import { TResponseInputV2, ZResponseInputV2 } from "./types/response";
 
@@ -82,6 +83,19 @@ export const POST = async (request: Request, context: Context): Promise<Response
         "survey.environmentId": survey.environmentId,
         environmentId,
       },
+      true
+    );
+  }
+
+  const choiceExclusionViolations = getChoiceExclusionViolations(
+    survey,
+    responseInputValidation.data.data,
+    responseInputValidation.data.language ?? "default"
+  );
+  if (choiceExclusionViolations.length > 0) {
+    return responses.badRequestResponse(
+      "Response contains answers excluded by an earlier question",
+      { questionIds: choiceExclusionViolations.join(", ") },
       true
     );
   }

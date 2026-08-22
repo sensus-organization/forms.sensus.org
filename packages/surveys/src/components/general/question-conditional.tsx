@@ -17,6 +17,7 @@ import { getLocalizedValue } from "@/lib/i18n";
 import { type TJsFileUploadParams } from "@formbricks/types/js";
 import { type TResponseData, type TResponseDataValue, type TResponseTtc } from "@formbricks/types/responses";
 import { type TUploadFileConfig } from "@formbricks/types/storage";
+import { getChoiceAnswerToken } from "@formbricks/types/surveys/choice-exclusion";
 import {
   type TSurveyQuestion,
   type TSurveyQuestionChoice,
@@ -26,7 +27,9 @@ import {
 
 interface QuestionConditionalProps {
   question: TSurveyQuestion;
+  questions: TSurveyQuestion[];
   value: string | number | string[] | Record<string, string>;
+  responseData: TResponseData;
   onChange: (responseData: TResponseData) => void;
   onSubmit: (data: TResponseData, ttc: TResponseTtc) => void;
   onBack: () => void;
@@ -47,7 +50,9 @@ interface QuestionConditionalProps {
 
 export function QuestionConditional({
   question,
+  questions,
   value,
+  responseData,
   onChange,
   onSubmit,
   onBack,
@@ -104,6 +109,22 @@ export function QuestionConditional({
       key={question.id}
       question={question}
       value={typeof value === "string" ? value : undefined}
+      excludedChoiceTokens={question.choiceExclusion?.questionIds.flatMap((questionId) => {
+        const sourceQuestion = questions.find(({ id }) => id === questionId);
+        if (
+          sourceQuestion?.type !== TSurveyQuestionTypeEnum.MultipleChoiceSingle &&
+          sourceQuestion?.type !== TSurveyQuestionTypeEnum.MultipleChoiceMulti
+        ) {
+          return [];
+        }
+        const sourceValue = responseData[questionId];
+        const sourceAnswers = typeof sourceValue === "string" ? [sourceValue] : sourceValue;
+        if (!Array.isArray(sourceAnswers)) return [];
+
+        return sourceAnswers
+          .map((answer) => getChoiceAnswerToken(sourceQuestion, answer, languageCode))
+          .filter((token): token is string => typeof token === "string");
+      })}
       onChange={onChange}
       onSubmit={onSubmit}
       onBack={onBack}

@@ -43,7 +43,7 @@ export const PUT = async (
       return responses.notFoundResponse("Response", responseId, true);
     }
     if (error instanceof InvalidInputError) {
-      return responses.badRequestResponse(error.message);
+      return responses.badRequestResponse(error.message, undefined, true);
     }
     if (error instanceof DatabaseError) {
       logger.error(

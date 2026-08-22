@@ -17,8 +17,9 @@ import { Prisma } from "@prisma/client";
 import { beforeEach, describe, expect, test } from "vitest";
 import { testInputValidation } from "vitestSetup";
 import { PrismaErrorType } from "@formbricks/database/types/error";
-import { DatabaseError, ResourceNotFoundError } from "@formbricks/types/errors";
+import { DatabaseError, InvalidInputError, ResourceNotFoundError } from "@formbricks/types/errors";
 import { TResponse } from "@formbricks/types/responses";
+import { TSurveyQuestionTypeEnum } from "@formbricks/types/surveys/types";
 import { TTag } from "@formbricks/types/tags";
 import {
   mockContactAttributeKey,
@@ -86,6 +87,7 @@ beforeEach(() => {
 
   prisma.organization.findFirst.mockResolvedValue(mockOrganizationOutput);
   prisma.organization.findUnique.mockResolvedValue(mockOrganizationOutput);
+  prisma.survey.findUnique.mockResolvedValue(mockSurveyOutput);
   prisma.project.findMany.mockResolvedValue([]);
   // @ts-expect-error
   prisma.response.aggregate.mockResolvedValue({ _count: { id: 1 } });
@@ -138,6 +140,42 @@ describe("Tests for getResponse service", () => {
       prisma.response.findUnique.mockResolvedValue(null);
       const response = await getResponse(mockResponse.id);
       expect(response).toBeNull();
+    });
+
+    test("rejects a response that repeats an excluded choice", async () => {
+      prisma.survey.findUnique.mockResolvedValue({
+        ...mockSurveyOutput,
+        questions: [
+          {
+            id: "first-vote",
+            type: TSurveyQuestionTypeEnum.MultipleChoiceSingle,
+            headline: { default: "First vote" },
+            required: true,
+            choices: [
+              { id: "candidate-a", label: { default: "Candidate A" } },
+              { id: "candidate-b", label: { default: "Candidate B" } },
+            ],
+          },
+          {
+            id: "second-vote",
+            type: TSurveyQuestionTypeEnum.MultipleChoiceSingle,
+            headline: { default: "Second vote" },
+            required: true,
+            choices: [
+              { id: "candidate-a", label: { default: "Candidate A" } },
+              { id: "candidate-b", label: { default: "Candidate B" } },
+            ],
+            choiceExclusion: { questionIds: ["first-vote"] },
+          },
+        ],
+      });
+
+      await expect(
+        updateResponse(mockResponse.id, {
+          data: { "first-vote": "Candidate A", "second-vote": "Candidate A" },
+          finished: true,
+        })
+      ).rejects.toThrow(InvalidInputError);
     });
 
     test("Throws DatabaseError on PrismaClientKnownRequestError", async () => {
