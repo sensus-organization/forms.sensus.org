@@ -541,7 +541,7 @@ export const updateResponse = async (
     const responsePrisma = shouldPreventDuplicate
       ? await prisma.$transaction(async (transaction) => {
           const lockKey = `${currentResponse.surveyId}:${verifiedEmail}`;
-          await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+          await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
 
           const existingResponse = await transaction.response.findFirst({
             where: {
