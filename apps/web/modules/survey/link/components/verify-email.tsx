@@ -10,6 +10,7 @@ import { Input } from "@/modules/ui/components/input";
 import { StackedCardsContainer } from "@/modules/ui/components/stacked-cards-container";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslate } from "@tolgee/react";
+import DOMPurify from "isomorphic-dompurify";
 import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -176,11 +177,51 @@ export const VerifyEmail = ({
           {!emailSent && showPreviewQuestions && (
             <div className="w-full">
               <p className="text-2xl font-bold">{t("s.question_preview")}</p>
-              <div className="mt-4 flex w-full flex-col justify-center rounded-lg border border-slate-200 bg-slate-50 bg-opacity-20 p-8 text-left text-slate-700">
+              <div className="mt-4 max-h-[60vh] w-full overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 bg-opacity-20 p-6 text-left text-slate-700">
+                {localSurvey.welcomeCard.enabled && (
+                  <div className="border-b border-slate-200 pb-5">
+                    {localSurvey.welcomeCard.headline && (
+                      <div
+                        className="break-words text-base font-semibold"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(
+                            getLocalizedValue(localSurvey.welcomeCard.headline, languageCode)
+                          ),
+                        }}
+                      />
+                    )}
+                    {localSurvey.welcomeCard.html && (
+                      <div
+                        className="mt-2 break-words text-sm text-slate-500"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(
+                            getLocalizedValue(localSurvey.welcomeCard.html, languageCode)
+                          ),
+                        }}
+                      />
+                    )}
+                  </div>
+                )}
                 {localSurvey.questions.map((question, index) => (
-                  <p key={question.id} className="my-1 break-words text-sm">
-                    {`${(index + 1).toString()}. ${getLocalizedValue(question.headline, languageCode)}`}
-                  </p>
+                  <div key={question.id} className="border-b border-slate-200 py-5 last:border-b-0 last:pb-0">
+                    <div className="flex gap-2 text-sm font-semibold">
+                      <span>{`${(index + 1).toString()}.`}</span>
+                      <div
+                        className="min-w-0 break-words"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(getLocalizedValue(question.headline, languageCode)),
+                        }}
+                      />
+                    </div>
+                    {question.subheader && (
+                      <div
+                        className="mt-2 break-words pl-5 text-sm text-slate-500"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(getLocalizedValue(question.subheader, languageCode)),
+                        }}
+                      />
+                    )}
+                  </div>
                 ))}
               </div>
               <Button type="button" variant="ghost" className="mt-6" onClick={handlePreviewClick}>
