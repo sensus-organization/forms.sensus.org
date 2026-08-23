@@ -14,7 +14,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@formbricks/database";
 import { logger } from "@formbricks/logger";
 import { TContactAttributes } from "@formbricks/types/contact-attribute";
-import { DatabaseError, ResourceNotFoundError } from "@formbricks/types/errors";
+import { DatabaseError, InvalidInputError, ResourceNotFoundError } from "@formbricks/types/errors";
 import { TResponse, TResponseInput, ZResponseInput } from "@formbricks/types/responses";
 import { TTag } from "@formbricks/types/tags";
 import { getContactByUserId } from "./contact";
@@ -132,10 +132,41 @@ export const createResponse = async (responseInput: TResponseInput): Promise<TRe
       updatedAt,
     };
 
-    const responsePrisma = await prisma.response.create({
-      data: prismaData,
-      select: responseSelection,
-    });
+    const verifiedEmail = typeof data.verifiedEmail === "string" ? data.verifiedEmail : undefined;
+    const duplicatePreventionSurvey =
+      finished && verifiedEmail
+        ? await prisma.survey.findUnique({
+            where: { id: surveyId },
+            select: { isVerifyEmailEnabled: true, isSingleResponsePerEmailEnabled: true },
+          })
+        : null;
+    const shouldPreventDuplicate =
+      duplicatePreventionSurvey?.isVerifyEmailEnabled &&
+      duplicatePreventionSurvey.isSingleResponsePerEmailEnabled;
+
+    const responsePrisma = shouldPreventDuplicate
+      ? await prisma.$transaction(async (transaction) => {
+          const lockKey = `${surveyId}:${verifiedEmail}`;
+          await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+
+          const existingResponse = await transaction.response.findFirst({
+            where: {
+              surveyId,
+              finished: true,
+              data: { path: ["verifiedEmail"], equals: verifiedEmail },
+            },
+            select: { id: true },
+          });
+          if (existingResponse) {
+            throw new InvalidInputError("A completed response already exists for this email address");
+          }
+
+          return transaction.response.create({ data: prismaData, select: responseSelection });
+        })
+      : await prisma.response.create({
+          data: prismaData,
+          select: responseSelection,
+        });
 
     const response: TResponse = {
       ...responsePrisma,

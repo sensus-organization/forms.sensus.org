@@ -522,20 +522,51 @@ export const updateResponse = async (
       ...responseInput.variables,
     };
 
-    const responsePrisma = await prisma.response.update({
-      where: {
-        id: responseId,
-      },
-      data: {
-        finished: responseInput.finished,
-        endingId: responseInput.endingId,
-        data,
-        ttc,
-        language,
-        variables,
-      },
-      select: responseSelection,
-    });
+    const updateData = {
+      finished: responseInput.finished,
+      endingId: responseInput.endingId,
+      data,
+      ttc,
+      language,
+      variables,
+    };
+    const verifiedEmail = typeof data.verifiedEmail === "string" ? data.verifiedEmail : undefined;
+    const shouldPreventDuplicate =
+      responseInput.finished &&
+      !currentResponse.finished &&
+      verifiedEmail &&
+      survey.isVerifyEmailEnabled &&
+      survey.isSingleResponsePerEmailEnabled;
+
+    const responsePrisma = shouldPreventDuplicate
+      ? await prisma.$transaction(async (transaction) => {
+          const lockKey = `${currentResponse.surveyId}:${verifiedEmail}`;
+          await transaction.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+
+          const existingResponse = await transaction.response.findFirst({
+            where: {
+              surveyId: currentResponse.surveyId,
+              id: { not: responseId },
+              finished: true,
+              data: { path: ["verifiedEmail"], equals: verifiedEmail },
+            },
+            select: { id: true },
+          });
+          if (existingResponse) {
+            throw new InvalidInputError("A completed response already exists for this email address");
+          }
+
+          return transaction.response.update({
+            where: { id: responseId },
+            data: updateData,
+            select: responseSelection,
+          });
+        })
+      : await prisma.response.update({
+          where: { id: responseId },
+          data: updateData,
+          select: responseSelection,
+        });
 
     const response: TResponse = {
       ...responsePrisma,
