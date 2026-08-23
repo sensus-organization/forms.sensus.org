@@ -7,36 +7,29 @@ import { prisma } from "@formbricks/database";
 import { DatabaseError } from "@formbricks/types/errors";
 
 export const isSurveyResponsePresent = reactCache(
-  async (surveyId: string, email: string): Promise<boolean> =>
-    cache(
-      async () => {
-        try {
-          const response = await prisma.response.findFirst({
-            where: {
-              surveyId,
-              finished: true,
-              data: {
-                path: ["verifiedEmail"],
-                equals: email,
-              },
-            },
-            select: { id: true },
-          });
+  async (surveyId: string, email: string): Promise<boolean> => {
+    try {
+      const response = await prisma.response.findFirst({
+        where: {
+          surveyId,
+          finished: true,
+          data: {
+            path: ["verifiedEmail"],
+            equals: email,
+          },
+        },
+        select: { id: true },
+      });
 
-          return !!response;
-        } catch (error) {
-          if (error instanceof Prisma.PrismaClientKnownRequestError) {
-            throw new DatabaseError(error.message);
-          }
-
-          throw error;
-        }
-      },
-      [`link-surveys-isSurveyResponsePresent-${surveyId}-${email}`],
-      {
-        tags: [responseCache.tag.bySurveyId(surveyId)],
+      return !!response;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new DatabaseError(error.message);
       }
-    )()
+
+      throw error;
+    }
+  }
 );
 
 export const getResponseBySingleUseId = reactCache(
