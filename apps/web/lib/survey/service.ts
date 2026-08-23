@@ -54,6 +54,7 @@ export const selectSurvey = {
   autoComplete: true,
   isVerifyEmailEnabled: true,
   isSingleResponsePerEmailEnabled: true,
+  emailVerificationMessage: true,
   isBackButtonHidden: true,
   redirectUrl: true,
   projectOverwrites: true,

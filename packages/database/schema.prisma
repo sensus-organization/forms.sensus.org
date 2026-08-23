@@ -410,6 +410,8 @@ model Survey {
   verifyEmail                     Json? // deprecated
   isVerifyEmailEnabled            Boolean          @default(false)
   isSingleResponsePerEmailEnabled Boolean          @default(false)
+  /// [SurveyEmailVerificationMessage]
+  emailVerificationMessage        Json?
   isBackButtonHidden              Boolean          @default(false)
   pin                             String?
   resultShareKey                  String?          @unique

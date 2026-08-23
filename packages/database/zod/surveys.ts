@@ -200,6 +200,15 @@ const ZSurveyBase = z.object({
   isSingleResponsePerEmailEnabled: z.boolean().openapi({
     description: "Whether single response per email is enabled",
   }),
+  emailVerificationMessage: z
+    .object({
+      heading: z.string(),
+      subheading: z.string(),
+    })
+    .nullable()
+    .openapi({
+      description: "Custom copy displayed on the email verification screen",
+    }),
   inlineTriggers: z.array(z.any()).nullable().openapi({
     description: "Inline triggers configuration",
   }),

@@ -30,13 +30,7 @@ const ZVerifyEmailInput = z.object({
 });
 type TVerifyEmailInput = z.infer<typeof ZVerifyEmailInput>;
 
-export const VerifyEmail = ({
-  survey,
-  isErrorComponent,
-  singleUseId,
-  styling,
-  locale,
-}: VerifyEmailProps) => {
+export const VerifyEmail = ({ survey, isErrorComponent, singleUseId, styling, locale }: VerifyEmailProps) => {
   const { t } = useTranslate();
   const form = useForm<TVerifyEmailInput>({
     defaultValues: {
@@ -117,10 +111,17 @@ export const VerifyEmail = ({
             }}>
             {!emailSent && (
               <div className="flex flex-col">
-                <img src="https://cdn.sensus.org/branding/logo-rgb.svg" alt="SensUs" className="mx-auto h-16" />
-                <p className="mt-8 text-2xl font-bold lg:text-4xl">{t("s.verify_email_before_submission")}</p>
+                <img
+                  src="https://cdn.sensus.org/branding/logo-rgb.svg"
+                  alt="SensUs"
+                  className="mx-auto h-16"
+                />
+                <p className="mt-8 text-2xl font-bold lg:text-4xl">
+                  {localSurvey.emailVerificationMessage?.heading ?? t("s.verify_email_before_submission")}
+                </p>
                 <p className="mt-4 text-sm text-slate-500 lg:text-base">
-                  {t("s.verify_email_before_submission_description")}
+                  {localSurvey.emailVerificationMessage?.subheading ??
+                    t("s.verify_email_before_submission_description")}
                 </p>
                 <FormField
                   control={form.control}

@@ -221,6 +221,7 @@ const baseSurveyProperties = {
   },
   isVerifyEmailEnabled: false,
   isSingleResponsePerEmailEnabled: false,
+  emailVerificationMessage: null,
   attributeFilters: [],
   ...commonMockProperties,
 };

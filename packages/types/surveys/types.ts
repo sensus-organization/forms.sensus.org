@@ -244,6 +244,13 @@ export const ZSurveyClosedMessage = z
 
 export type TSurveyClosedMessage = z.infer<typeof ZSurveyClosedMessage>;
 
+export const ZSurveyEmailVerificationMessage = z.object({
+  heading: z.string(),
+  subheading: z.string(),
+});
+
+export type TSurveyEmailVerificationMessage = z.infer<typeof ZSurveyEmailVerificationMessage>;
+
 export const ZSurveySingleUse = z
   .object({
     enabled: z.boolean(),
@@ -878,6 +885,7 @@ export const ZSurvey = z
     singleUse: ZSurveySingleUse.nullable(),
     isVerifyEmailEnabled: z.boolean(),
     isSingleResponsePerEmailEnabled: z.boolean(),
+    emailVerificationMessage: ZSurveyEmailVerificationMessage.nullable(),
     isBackButtonHidden: z.boolean(),
     pin: z.string().min(4, { message: "PIN must be a four digit number" }).nullish(),
     resultShareKey: z.string().nullable(),

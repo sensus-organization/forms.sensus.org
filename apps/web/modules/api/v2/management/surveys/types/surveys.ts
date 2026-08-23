@@ -48,6 +48,7 @@ export const ZSurveyInput = ZSurveyWithoutQuestionType.pick({
   singleUse: true,
   isVerifyEmailEnabled: true,
   isSingleResponsePerEmailEnabled: true,
+  emailVerificationMessage: true,
   inlineTriggers: true,
   verifyEmail: true,
   displayPercentage: true,
@@ -74,6 +75,7 @@ export const ZSurveyInput = ZSurveyWithoutQuestionType.pick({
     showLanguageSwitch: true,
     inlineTriggers: true,
     verifyEmail: true,
+    emailVerificationMessage: true,
     displayPercentage: true,
   })
   .openapi({

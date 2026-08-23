@@ -39,6 +39,7 @@ export const getMinimalSurvey = (t: TFnType): TSurvey => ({
   showLanguageSwitch: false,
   isVerifyEmailEnabled: false,
   isSingleResponsePerEmailEnabled: false,
+  emailVerificationMessage: null,
   variables: [],
   followUps: [],
   isBackButtonHidden: false,

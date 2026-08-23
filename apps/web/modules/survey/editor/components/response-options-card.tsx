@@ -6,6 +6,7 @@ import { DatePicker } from "@/modules/ui/components/date-picker";
 import { Input } from "@/modules/ui/components/input";
 import { Label } from "@/modules/ui/components/label";
 import { Switch } from "@/modules/ui/components/switch";
+import { Textarea } from "@/modules/ui/components/textarea";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import { useTranslate } from "@tolgee/react";
@@ -37,6 +38,14 @@ export const ResponseOptionsCard = ({
   const [isSingleResponsePerEmailEnabledToggle, setIsSingleResponsePerEmailToggle] = useState(
     localSurvey.isSingleResponsePerEmailEnabled
   );
+  const [emailVerificationMessage, setEmailVerificationMessage] = useState({
+    heading:
+      localSurvey.emailVerificationMessage?.heading ??
+      t("environments.surveys.edit.verify_email_before_submission"),
+    subheading:
+      localSurvey.emailVerificationMessage?.subheading ??
+      t("environments.surveys.edit.verify_email_before_submission_default_note"),
+  });
 
   const [surveyClosedMessage, setSurveyClosedMessage] = useState({
     heading: t("environments.surveys.edit.survey_completed_heading"),
@@ -127,6 +136,21 @@ export const ResponseOptionsCard = ({
       ...localSurvey,
       isSingleResponsePerEmailEnabled: !localSurvey.isSingleResponsePerEmailEnabled,
     });
+  };
+
+  const handleEmailVerificationMessageChange = ({
+    heading,
+    subheading,
+  }: {
+    heading?: string;
+    subheading?: string;
+  }) => {
+    const message = {
+      heading: heading ?? emailVerificationMessage.heading,
+      subheading: subheading ?? emailVerificationMessage.subheading,
+    };
+    setEmailVerificationMessage(message);
+    setLocalSurvey({ ...localSurvey, emailVerificationMessage: message });
   };
 
   const handleRunOnDateChange = (date: Date) => {
@@ -537,7 +561,31 @@ export const ResponseOptionsCard = ({
                 title={t("environments.surveys.edit.verify_email_before_submission")}
                 description={t("environments.surveys.edit.verify_email_before_submission_description")}
                 childBorder={true}>
-                <div className="m-1">
+                <div className="space-y-4 p-4">
+                  <div>
+                    <Label htmlFor="emailVerificationHeading">{t("environments.surveys.edit.heading")}</Label>
+                    <Input
+                      id="emailVerificationHeading"
+                      className="mt-2 bg-white"
+                      value={emailVerificationMessage.heading}
+                      onChange={(event) =>
+                        handleEmailVerificationMessageChange({ heading: event.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="emailVerificationNote">
+                      {t("environments.surveys.edit.email_verification_note")}
+                    </Label>
+                    <Textarea
+                      id="emailVerificationNote"
+                      className="mt-2 bg-white"
+                      value={emailVerificationMessage.subheading}
+                      onChange={(event) =>
+                        handleEmailVerificationMessageChange({ subheading: event.target.value })
+                      }
+                    />
+                  </div>
                   <AdvancedOptionToggle
                     htmlId="preventDoubleSubmission"
                     isChecked={isSingleResponsePerEmailEnabledToggle}

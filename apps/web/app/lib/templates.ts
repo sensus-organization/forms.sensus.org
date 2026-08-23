@@ -8,7 +8,6 @@ import { TFnType } from "@tolgee/react";
 import { TSurvey, TSurveyOpenTextQuestion, TSurveyQuestionTypeEnum } from "@formbricks/types/surveys/types";
 import { TTemplate } from "@formbricks/types/templates";
 
-
 export const templates = (_: TFnType): TTemplate[] => [
   /*cartAbandonmentSurvey(t),
   siteAbandonmentSurvey(t),
@@ -165,6 +164,7 @@ export const previewSurvey = (projectName: string, t: TFnType) => {
     autoComplete: 50,
     isVerifyEmailEnabled: false,
     isSingleResponsePerEmailEnabled: false,
+    emailVerificationMessage: null,
     redirectUrl: null,
     projectOverwrites: null,
     surveyClosedMessage: null,
