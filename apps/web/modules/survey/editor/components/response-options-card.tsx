@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/cn";
 import { AdvancedOptionToggle } from "@/modules/ui/components/advanced-option-toggle";
-import { DatePicker } from "@/modules/ui/components/date-picker";
+import { DatePicker, combineDateWithTime, setLocalTime } from "@/modules/ui/components/date-picker";
 import { Input } from "@/modules/ui/components/input";
 import { Label } from "@/modules/ui/components/label";
 import { Switch } from "@/modules/ui/components/switch";
@@ -154,40 +154,22 @@ export const ResponseOptionsCard = ({
   };
 
   const handleRunOnDateChange = (date: Date) => {
-    const utcDate = new Date(
-      Date.UTC(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        runOnDate?.getUTCHours() ?? 0,
-        runOnDate?.getUTCMinutes() ?? 0
-      )
-    );
-    setRunOnDate(utcDate);
-    setLocalSurvey({ ...localSurvey, runOnDate: utcDate ?? null });
+    const localDate = combineDateWithTime(date, runOnDate);
+    setRunOnDate(localDate);
+    setLocalSurvey({ ...localSurvey, runOnDate: localDate });
   };
 
   const handleCloseOnDateChange = (date: Date) => {
-    const utcDate = new Date(
-      Date.UTC(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        closeOnDate?.getUTCHours() ?? 0,
-        closeOnDate?.getUTCMinutes() ?? 0
-      )
-    );
-    setCloseOnDate(utcDate);
-    setLocalSurvey({ ...localSurvey, closeOnDate: utcDate ?? null });
+    const localDate = combineDateWithTime(date, closeOnDate);
+    setCloseOnDate(localDate);
+    setLocalSurvey({ ...localSurvey, closeOnDate: localDate });
   };
 
   const handleTimeChange = (field: "runOnDate" | "closeOnDate", time: string) => {
     const currentDate = field === "runOnDate" ? runOnDate : closeOnDate;
     if (!currentDate || !time) return;
 
-    const [hours, minutes] = time.split(":").map(Number);
-    const updatedDate = new Date(currentDate);
-    updatedDate.setUTCHours(hours, minutes, 0, 0);
+    const updatedDate = setLocalTime(currentDate, time);
 
     if (field === "runOnDate") {
       setRunOnDate(updatedDate);
@@ -404,17 +386,17 @@ export const ResponseOptionsCard = ({
               <DatePicker date={runOnDate} updateSurveyDate={handleRunOnDateChange} />
               <Input
                 type="time"
-                aria-label="Release time (UTC)"
+                aria-label="Release time (local time)"
                 disabled={!runOnDate}
                 value={
                   runOnDate
-                    ? `${runOnDate.getUTCHours().toString().padStart(2, "0")}:${runOnDate.getUTCMinutes().toString().padStart(2, "0")}`
+                    ? `${runOnDate.getHours().toString().padStart(2, "0")}:${runOnDate.getMinutes().toString().padStart(2, "0")}`
                     : "00:00"
                 }
                 onChange={(event) => handleTimeChange("runOnDate", event.target.value)}
                 className="w-32 bg-white"
               />
-              <span className="text-sm text-slate-500">UTC</span>
+              <span className="text-sm text-slate-500">Local time</span>
             </div>
           </AdvancedOptionToggle>
           {/* Close Survey on Date */}
@@ -431,17 +413,17 @@ export const ResponseOptionsCard = ({
               <DatePicker date={closeOnDate} updateSurveyDate={handleCloseOnDateChange} />
               <Input
                 type="time"
-                aria-label="Close time (UTC)"
+                aria-label="Close time (local time)"
                 disabled={!closeOnDate}
                 value={
                   closeOnDate
-                    ? `${closeOnDate.getUTCHours().toString().padStart(2, "0")}:${closeOnDate.getUTCMinutes().toString().padStart(2, "0")}`
+                    ? `${closeOnDate.getHours().toString().padStart(2, "0")}:${closeOnDate.getMinutes().toString().padStart(2, "0")}`
                     : "00:00"
                 }
                 onChange={(event) => handleTimeChange("closeOnDate", event.target.value)}
                 className="w-32 bg-white"
               />
-              <span className="text-sm text-slate-500">UTC</span>
+              <span className="text-sm text-slate-500">Local time</span>
             </div>
           </AdvancedOptionToggle>
 

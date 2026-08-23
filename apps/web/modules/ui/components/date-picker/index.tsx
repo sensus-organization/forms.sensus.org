@@ -15,19 +15,32 @@ interface DatePickerProps {
   updateSurveyDate: (date: Date) => void;
 }
 
-export const getCalendarDateFromUtc = (date: Date): Date =>
-  new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-
 export const getStartOfDay = (date: Date): Date => {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   return startOfDay;
 };
 
+export const combineDateWithTime = (date: Date, time: Date | null): Date =>
+  new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    time?.getHours() ?? 0,
+    time?.getMinutes() ?? 0
+  );
+
+export const setLocalTime = (date: Date, time: string): Date => {
+  const [hours, minutes] = time.split(":").map(Number);
+  const updatedDate = new Date(date);
+  updatedDate.setHours(hours, minutes, 0, 0);
+  return updatedDate;
+};
+
 export const DatePicker = ({ date, updateSurveyDate }: DatePickerProps) => {
   const { t } = useTranslate();
   const [isOpen, setIsOpen] = useState(false);
-  const value = date ? getCalendarDateFromUtc(date) : undefined;
+  const value = date ? new Date(date) : undefined;
   const formattedDate = value ? format(value, "do MMM, yyyy") : undefined;
   const today = getStartOfDay(new Date());
 
