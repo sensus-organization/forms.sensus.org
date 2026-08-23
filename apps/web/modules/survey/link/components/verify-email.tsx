@@ -221,6 +221,14 @@ export const VerifyEmail = ({
                         }}
                       />
                     )}
+                    {"html" in question && question.html && (
+                      <div
+                        className="mt-2 break-words pl-5 text-sm text-slate-500"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(getLocalizedValue(question.html, languageCode)),
+                        }}
+                      />
+                    )}
                   </div>
                 ))}
               </div>
