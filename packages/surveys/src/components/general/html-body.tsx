@@ -13,7 +13,15 @@ export function HtmlBody({ htmlString, questionId }: HtmlBodyProps) {
 
   useEffect(() => {
     if (htmlString) {
-      setSafeHtml(DOMPurify.sanitize(htmlString, { ADD_ATTR: ["target"] }));
+      const sanitizedHtml = DOMPurify.sanitize(htmlString, { ADD_ATTR: ["target", "rel"] });
+      const htmlDocument = new DOMParser().parseFromString(sanitizedHtml, "text/html");
+
+      htmlDocument.querySelectorAll("a").forEach((link) => {
+        link.setAttribute("target", "_blank");
+        link.setAttribute("rel", "noopener noreferrer");
+      });
+
+      setSafeHtml(htmlDocument.body.innerHTML);
     }
   }, [htmlString]);
 

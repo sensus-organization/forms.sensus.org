@@ -130,15 +130,47 @@ export const ResponseOptionsCard = ({
   };
 
   const handleRunOnDateChange = (date: Date) => {
-    const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0));
+    const utcDate = new Date(
+      Date.UTC(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        runOnDate?.getUTCHours() ?? 0,
+        runOnDate?.getUTCMinutes() ?? 0
+      )
+    );
     setRunOnDate(utcDate);
     setLocalSurvey({ ...localSurvey, runOnDate: utcDate ?? null });
   };
 
   const handleCloseOnDateChange = (date: Date) => {
-    const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0));
+    const utcDate = new Date(
+      Date.UTC(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        closeOnDate?.getUTCHours() ?? 0,
+        closeOnDate?.getUTCMinutes() ?? 0
+      )
+    );
     setCloseOnDate(utcDate);
     setLocalSurvey({ ...localSurvey, closeOnDate: utcDate ?? null });
+  };
+
+  const handleTimeChange = (field: "runOnDate" | "closeOnDate", time: string) => {
+    const currentDate = field === "runOnDate" ? runOnDate : closeOnDate;
+    if (!currentDate || !time) return;
+
+    const [hours, minutes] = time.split(":").map(Number);
+    const updatedDate = new Date(currentDate);
+    updatedDate.setUTCHours(hours, minutes, 0, 0);
+
+    if (field === "runOnDate") {
+      setRunOnDate(updatedDate);
+    } else {
+      setCloseOnDate(updatedDate);
+    }
+    setLocalSurvey({ ...localSurvey, [field]: updatedDate });
   };
 
   const handleClosedSurveyMessageChange = ({
@@ -290,7 +322,7 @@ export const ResponseOptionsCard = ({
       )}>
       <Collapsible.CollapsibleTrigger asChild className="h-full w-full cursor-pointer">
         <div className="inline-flex px-4 py-4">
-          <div className="flex items-center pr-5 pl-2">
+          <div className="flex items-center pl-2 pr-5">
             <CheckIcon
               strokeWidth={3}
               className="h-7 w-7 rounded-full border border-green-300 bg-green-100 p-1.5 text-green-600"
@@ -328,7 +360,7 @@ export const ResponseOptionsCard = ({
                   value={localSurvey.autoComplete?.toString()}
                   onChange={handleInputResponse}
                   onBlur={handleInputResponseBlur}
-                  className="mr-2 ml-2 inline w-20 bg-white text-center text-sm"
+                  className="ml-2 mr-2 inline w-20 bg-white text-center text-sm"
                 />
                 {t("environments.surveys.edit.completed_responses")}
               </p>
@@ -344,8 +376,21 @@ export const ResponseOptionsCard = ({
               "environments.surveys.edit.automatically_release_the_survey_at_the_beginning_of_the_day_utc"
             )}
             childBorder={true}>
-            <div className="p-4">
+            <div className="flex flex-wrap items-center gap-3 p-4">
               <DatePicker date={runOnDate} updateSurveyDate={handleRunOnDateChange} />
+              <Input
+                type="time"
+                aria-label="Release time (UTC)"
+                disabled={!runOnDate}
+                value={
+                  runOnDate
+                    ? `${runOnDate.getUTCHours().toString().padStart(2, "0")}:${runOnDate.getUTCMinutes().toString().padStart(2, "0")}`
+                    : "00:00"
+                }
+                onChange={(event) => handleTimeChange("runOnDate", event.target.value)}
+                className="w-32 bg-white"
+              />
+              <span className="text-sm text-slate-500">UTC</span>
             </div>
           </AdvancedOptionToggle>
           {/* Close Survey on Date */}
@@ -358,8 +403,21 @@ export const ResponseOptionsCard = ({
               "environments.surveys.edit.automatically_closes_the_survey_at_the_beginning_of_the_day_utc"
             )}
             childBorder={true}>
-            <div className="p-4">
+            <div className="flex flex-wrap items-center gap-3 p-4">
               <DatePicker date={closeOnDate} updateSurveyDate={handleCloseOnDateChange} />
+              <Input
+                type="time"
+                aria-label="Close time (UTC)"
+                disabled={!closeOnDate}
+                value={
+                  closeOnDate
+                    ? `${closeOnDate.getUTCHours().toString().padStart(2, "0")}:${closeOnDate.getUTCMinutes().toString().padStart(2, "0")}`
+                    : "00:00"
+                }
+                onChange={(event) => handleTimeChange("closeOnDate", event.target.value)}
+                className="w-32 bg-white"
+              />
+              <span className="text-sm text-slate-500">UTC</span>
             </div>
           </AdvancedOptionToggle>
 
@@ -379,7 +437,7 @@ export const ResponseOptionsCard = ({
                     <Input
                       autoFocus
                       id="heading"
-                      className="mt-2 mb-4 bg-white"
+                      className="mb-4 mt-2 bg-white"
                       name="heading"
                       defaultValue={surveyClosedMessage.heading}
                       onChange={(e) => handleClosedSurveyMessageChange({ heading: e.target.value })}
@@ -434,7 +492,7 @@ export const ResponseOptionsCard = ({
                     <Input
                       autoFocus
                       id="heading"
-                      className="mt-2 mb-4 bg-white"
+                      className="mb-4 mt-2 bg-white"
                       name="heading"
                       value={singleUseMessage.heading}
                       onChange={(e) => handleSingleUseSurveyMessageChange({ heading: e.target.value })}
@@ -442,7 +500,7 @@ export const ResponseOptionsCard = ({
 
                     <Label htmlFor="headline">{t("environments.surveys.edit.subheading")}</Label>
                     <Input
-                      className="mt-2 mb-4 bg-white"
+                      className="mb-4 mt-2 bg-white"
                       id="subheading"
                       name="subheading"
                       value={singleUseMessage.subheading}
