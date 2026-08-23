@@ -110,6 +110,21 @@ describe("LinkSurvey Component", () => {
     expect(screen.getByText(/SurveyLinkUsed:/)).toHaveTextContent("Single Use Message");
   });
 
+  test("renders SurveyLinkUsed when the verified email already has a response", () => {
+    const survey = {
+      ...dummySurvey,
+      isVerifyEmailEnabled: true,
+      isSingleResponsePerEmailEnabled: true,
+    };
+    const { container } = renderComponent({
+      survey,
+      emailVerificationStatus: "response-present",
+    });
+
+    expect(container.querySelector('[data-testid="survey-link-used"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-testid="survey-inline"]')).not.toBeInTheDocument();
+  });
+
   test("renders VerifyEmail error component when emailVerificationStatus is fishy", () => {
     // Set up survey with email verification enabled.
     const survey = { ...dummySurvey, isVerifyEmailEnabled: true };

@@ -130,16 +130,25 @@ export const LinkSurvey = ({
     );
   }
 
+  if (emailVerificationStatus === "response-present") {
+    return (
+      <>
+        <SurveyLinkUsed singleUseMessage={null} />
+        <LegalFooter
+          IMPRINT_URL={IMPRINT_URL}
+          PRIVACY_URL={PRIVACY_URL}
+          IS_FORMBRICKS_CLOUD={IS_FORMBRICKS_CLOUD}
+          surveyUrl={surveyDomain + "/s/" + survey.id}
+        />
+      </>
+    );
+  }
+
   if (survey.isVerifyEmailEnabled && emailVerificationStatus !== "verified") {
     if (emailVerificationStatus === "fishy") {
       return (
         <>
-          <VerifyEmail
-            survey={survey}
-            isErrorComponent={true}
-            styling={project.styling}
-            locale={locale}
-          />
+          <VerifyEmail survey={survey} isErrorComponent={true} styling={project.styling} locale={locale} />
           <LegalFooter
             IMPRINT_URL={IMPRINT_URL}
             PRIVACY_URL={PRIVACY_URL}
@@ -151,12 +160,7 @@ export const LinkSurvey = ({
     }
     return (
       <>
-        <VerifyEmail
-          singleUseId={suId ?? ""}
-          survey={survey}
-          styling={project.styling}
-          locale={locale}
-        />
+        <VerifyEmail singleUseId={suId ?? ""} survey={survey} styling={project.styling} locale={locale} />
         <LegalFooter
           IMPRINT_URL={IMPRINT_URL}
           PRIVACY_URL={PRIVACY_URL}

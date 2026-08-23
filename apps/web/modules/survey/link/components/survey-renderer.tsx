@@ -10,6 +10,7 @@ import { PinScreen } from "@/modules/survey/link/components/pin-screen";
 import { SurveyInactive } from "@/modules/survey/link/components/survey-inactive";
 import { getEmailVerificationDetails } from "@/modules/survey/link/lib/helper";
 import { getProjectByEnvironmentId } from "@/modules/survey/link/lib/project";
+import { isSurveyResponsePresent } from "@/modules/survey/link/lib/response";
 import { type Response } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { TSurvey } from "@formbricks/types/surveys/types";
@@ -79,6 +80,15 @@ export const renderSurvey = async ({
       const emailVerificationDetails = await getEmailVerificationDetails(survey.id, token);
       emailVerificationStatus = emailVerificationDetails.status;
       verifiedEmail = emailVerificationDetails.email;
+
+      if (
+        emailVerificationStatus === "verified" &&
+        verifiedEmail &&
+        survey.isSingleResponsePerEmailEnabled &&
+        (await isSurveyResponsePresent(survey.id, verifiedEmail))
+      ) {
+        emailVerificationStatus = "response-present";
+      }
     }
   }
 
