@@ -148,7 +148,13 @@ export const LinkSurvey = ({
     if (emailVerificationStatus === "fishy") {
       return (
         <>
-          <VerifyEmail survey={survey} isErrorComponent={true} styling={project.styling} locale={locale} />
+          <VerifyEmail
+            survey={survey}
+            isErrorComponent={true}
+            languageCode={languageCode}
+            styling={project.styling}
+            locale={locale}
+          />
           <LegalFooter
             IMPRINT_URL={IMPRINT_URL}
             PRIVACY_URL={PRIVACY_URL}
@@ -160,7 +166,13 @@ export const LinkSurvey = ({
     }
     return (
       <>
-        <VerifyEmail singleUseId={suId ?? ""} survey={survey} styling={project.styling} locale={locale} />
+        <VerifyEmail
+          singleUseId={suId ?? ""}
+          survey={survey}
+          languageCode={languageCode}
+          styling={project.styling}
+          locale={locale}
+        />
         <LegalFooter
           IMPRINT_URL={IMPRINT_URL}
           PRIVACY_URL={PRIVACY_URL}

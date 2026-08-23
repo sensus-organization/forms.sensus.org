@@ -1,5 +1,6 @@
 "use client";
 
+import { getLocalizedValue } from "@/lib/i18n/utils";
 import { getFormattedErrorMessage } from "@/lib/utils/helper";
 import { replaceHeadlineRecall } from "@/lib/utils/recall";
 import { isSurveyResponsePresentAction, sendLinkSurveyEmailAction } from "@/modules/survey/link/actions";
@@ -21,6 +22,7 @@ interface VerifyEmailProps {
   survey: TSurvey;
   isErrorComponent?: boolean;
   singleUseId?: string;
+  languageCode: string;
   styling: TProjectStyling;
   locale: string;
 }
@@ -30,7 +32,14 @@ const ZVerifyEmailInput = z.object({
 });
 type TVerifyEmailInput = z.infer<typeof ZVerifyEmailInput>;
 
-export const VerifyEmail = ({ survey, isErrorComponent, singleUseId, styling, locale }: VerifyEmailProps) => {
+export const VerifyEmail = ({
+  survey,
+  isErrorComponent,
+  singleUseId,
+  languageCode,
+  styling,
+  locale,
+}: VerifyEmailProps) => {
   const { t } = useTranslate();
   const form = useForm<TVerifyEmailInput>({
     defaultValues: {
@@ -43,6 +52,7 @@ export const VerifyEmail = ({ survey, isErrorComponent, singleUseId, styling, lo
   }, [survey]);
 
   const { isSubmitting } = form.formState;
+  const [showPreviewQuestions, setShowPreviewQuestions] = useState(false);
   const [emailSent, setEmailSent] = useState<boolean>(false);
 
   const submitEmail = async (emailInput: TVerifyEmailInput) => {
@@ -78,7 +88,12 @@ export const VerifyEmail = ({ survey, isErrorComponent, singleUseId, styling, lo
     }
   };
 
+  const handlePreviewClick = () => {
+    setShowPreviewQuestions((isVisible) => !isVisible);
+  };
+
   const handleGoBackClick = () => {
+    setShowPreviewQuestions(false);
     setEmailSent(false);
   };
 
@@ -97,78 +112,98 @@ export const VerifyEmail = ({ survey, isErrorComponent, singleUseId, styling, lo
   return (
     <div className="flex h-full w-full flex-col items-center justify-center p-2 text-center">
       <Toaster />
-      <StackedCardsContainer
-        cardArrangement={
-          localSurvey.styling?.cardArrangement?.linkSurveys ??
-          styling.cardArrangement?.linkSurveys ??
-          "straight"
-        }>
-        <FormProvider {...form}>
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              await form.handleSubmit(submitEmail)(e);
-            }}>
-            {!emailSent && (
-              <div className="flex flex-col">
-                <img
-                  src="https://cdn.sensus.org/branding/logo-rgb.svg"
-                  alt="SensUs"
-                  className="mx-auto h-16"
-                />
-                <p className="mt-8 text-2xl font-bold lg:text-4xl">
-                  {localSurvey.emailVerificationMessage?.heading ?? t("s.verify_email_before_submission")}
-                </p>
-                <p className="mt-4 text-sm text-slate-500 lg:text-base">
-                  {localSurvey.emailVerificationMessage?.subheading ??
-                    t("s.verify_email_before_submission_description")}
-                </p>
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field, fieldState: { error } }) => (
-                    <FormItem className="my-4 w-full space-y-4">
-                      <FormControl>
-                        <div>
-                          <div className="flex space-x-2">
-                            <Input
-                              value={field.value}
-                              onChange={(email) => {
-                                field.onChange(email);
-                              }}
-                              type="email"
-                              placeholder="engineering@acme.com"
-                              className="h-10 bg-white"
-                            />
-                            <Button type="submit" size="sm" loading={isSubmitting}>
-                              {t("s.verify_email_before_submission_button")}
-                            </Button>
+      <div className="w-full max-w-2xl">
+        <StackedCardsContainer
+          cardArrangement={
+            localSurvey.styling?.cardArrangement?.linkSurveys ??
+            styling.cardArrangement?.linkSurveys ??
+            "straight"
+          }>
+          <FormProvider {...form}>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                await form.handleSubmit(submitEmail)(e);
+              }}>
+              {!emailSent && !showPreviewQuestions && (
+                <div className="flex flex-col">
+                  <img
+                    src="https://cdn.sensus.org/branding/logo-rgb.svg"
+                    alt="SensUs"
+                    className="mx-auto h-16"
+                  />
+                  <p className="mt-8 break-words text-2xl font-bold lg:text-4xl">
+                    {localSurvey.emailVerificationMessage?.heading ?? t("s.verify_email_before_submission")}
+                  </p>
+                  <p className="mt-4 break-words text-sm text-slate-500 lg:text-base">
+                    {localSurvey.emailVerificationMessage?.subheading ??
+                      t("s.verify_email_before_submission_description")}
+                  </p>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field, fieldState: { error } }) => (
+                      <FormItem className="my-4 w-full space-y-4">
+                        <FormControl>
+                          <div>
+                            <div className="flex space-x-2">
+                              <Input
+                                value={field.value}
+                                onChange={(email) => {
+                                  field.onChange(email);
+                                }}
+                                type="email"
+                                placeholder="engineering@acme.com"
+                                className="h-10 bg-white"
+                              />
+                              <Button type="submit" size="sm" loading={isSubmitting}>
+                                {t("s.verify_email_before_submission_button")}
+                              </Button>
+                            </div>
+                            {error?.message && <FormError className="mt-2">{error.message}</FormError>}
                           </div>
-                          {error?.message && <FormError className="mt-2">{error.message}</FormError>}
-                        </div>
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="button" variant="ghost" className="mt-6" onClick={handlePreviewClick}>
+                    {t("s.just_curious")} <span>{t("s.preview_survey_questions")}</span>
+                  </Button>
+                </div>
+              )}
+            </form>
+          </FormProvider>
+          {!emailSent && showPreviewQuestions && (
+            <div className="w-full">
+              <p className="text-2xl font-bold">{t("s.question_preview")}</p>
+              <div className="mt-4 flex w-full flex-col justify-center rounded-lg border border-slate-200 bg-slate-50 bg-opacity-20 p-8 text-left text-slate-700">
+                {localSurvey.questions.map((question, index) => (
+                  <p key={question.id} className="my-1 break-words text-sm">
+                    {`${(index + 1).toString()}. ${getLocalizedValue(question.headline, languageCode)}`}
+                  </p>
+                ))}
               </div>
-            )}
-          </form>
-        </FormProvider>
-        {emailSent && (
-          <div>
-            <h1 className="mt-8 text-2xl font-bold lg:text-4xl">
-              {t("s.survey_sent_to", { email: form.getValues().email })}
-            </h1>
-            <p className="mt-4 text-center text-sm text-slate-500 lg:text-base">
-              {t("s.check_inbox_or_spam")}
-            </p>
-            <Button variant="secondary" className="mt-6" size="sm" onClick={handleGoBackClick}>
-              <ArrowLeft />
-              {t("common.back")}
-            </Button>
-          </div>
-        )}
-      </StackedCardsContainer>
+              <Button type="button" variant="ghost" className="mt-6" onClick={handlePreviewClick}>
+                {t("s.want_to_respond")} <span>{t("s.verify_email")}</span>
+              </Button>
+            </div>
+          )}
+          {emailSent && (
+            <div>
+              <h1 className="mt-8 text-2xl font-bold lg:text-4xl">
+                {t("s.survey_sent_to", { email: form.getValues().email })}
+              </h1>
+              <p className="mt-4 text-center text-sm text-slate-500 lg:text-base">
+                {t("s.check_inbox_or_spam")}
+              </p>
+              <Button variant="secondary" className="mt-6" size="sm" onClick={handleGoBackClick}>
+                <ArrowLeft />
+                {t("common.back")}
+              </Button>
+            </div>
+          )}
+        </StackedCardsContainer>
+      </div>
     </div>
   );
 };
