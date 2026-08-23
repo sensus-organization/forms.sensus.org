@@ -14,6 +14,7 @@ export const isSurveyResponsePresent = reactCache(
           const response = await prisma.response.findFirst({
             where: {
               surveyId,
+              finished: true,
               data: {
                 path: ["verifiedEmail"],
                 equals: email,
