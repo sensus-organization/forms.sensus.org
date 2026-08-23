@@ -570,8 +570,8 @@ export const updateSurvey = async (updatedSurvey: TSurvey): Promise<TSurvey> => 
       type,
     };
 
-    // Remove scheduled status when runOnDate is not set
-    if (data.status === "scheduled" && data.runOnDate === null) {
+    // Start scheduled surveys immediately when their release time has already passed or is removed.
+    if (data.status === "scheduled" && (!data.runOnDate || data.runOnDate <= new Date())) {
       data.status = "inProgress";
     }
     // Set scheduled status when runOnDate is set and in the future on completed surveys

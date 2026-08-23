@@ -8,6 +8,7 @@ import { LegalFooter } from "@/modules/survey/link/components/legal-footer";
 import { LinkSurvey } from "@/modules/survey/link/components/link-survey";
 import { PinScreen } from "@/modules/survey/link/components/pin-screen";
 import { SurveyInactive } from "@/modules/survey/link/components/survey-inactive";
+import { getEffectiveSurveyStatus } from "@/modules/survey/link/lib/availability";
 import { getEmailVerificationDetails } from "@/modules/survey/link/lib/helper";
 import { getProjectByEnvironmentId } from "@/modules/survey/link/lib/project";
 import { isSurveyResponsePresent } from "@/modules/survey/link/lib/response";
@@ -52,11 +53,16 @@ export const renderSurvey = async ({
   }
   const isMultiLanguageAllowed = false;
 
-  if (survey.status !== "inProgress" && !isPreview) {
+  const effectiveStatus = getEffectiveSurveyStatus(survey);
+  if (effectiveStatus === "draft") {
+    notFound();
+  }
+
+  if (effectiveStatus !== "inProgress" && !isPreview) {
     return (
       <>
         <SurveyInactive
-          status={survey.status}
+          status={effectiveStatus}
           surveyClosedMessage={survey.surveyClosedMessage ? survey.surveyClosedMessage : undefined}
         />
         <LegalFooter
