@@ -10,43 +10,32 @@ import { useRef, useState } from "react";
 import Calendar from "react-calendar";
 import "./styles.css";
 
-const getOrdinalSuffix = (day: number) => {
-  if (day > 3 && day < 21) return "th"; // 11th, 12th, 13th, etc.
-  switch (day % 10) {
-    case 1:
-      return "st";
-    case 2:
-      return "nd";
-    case 3:
-      return "rd";
-    default:
-      return "th";
-  }
-};
-
 interface DatePickerProps {
   date: Date | null;
   updateSurveyDate: (date: Date) => void;
 }
 
+export const getCalendarDateFromUtc = (date: Date): Date =>
+  new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+
+export const getStartOfDay = (date: Date): Date => {
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  return startOfDay;
+};
+
 export const DatePicker = ({ date, updateSurveyDate }: DatePickerProps) => {
   const { t } = useTranslate();
-  const [value, onChange] = useState<Date | undefined>(date ? new Date(date) : undefined);
-  const [formattedDate, setFormattedDate] = useState<string | undefined>(
-    date ? format(new Date(date), "do MMM, yyyy") : undefined
-  );
   const [isOpen, setIsOpen] = useState(false);
+  const value = date ? getCalendarDateFromUtc(date) : undefined;
+  const formattedDate = value ? format(value, "do MMM, yyyy") : undefined;
+  const today = getStartOfDay(new Date());
 
   const btnRef = useRef<HTMLButtonElement>(null);
 
   const onDateChange = (date: Date) => {
     if (date) {
       updateSurveyDate(date);
-      const day = date.getDate();
-      const ordinalSuffix = getOrdinalSuffix(day);
-      const formatted = format(date, `d'${ordinalSuffix}' MMM, yyyy`);
-      setFormattedDate(formatted);
-      onChange(date);
       setIsOpen(false);
     }
   };
@@ -83,7 +72,7 @@ export const DatePicker = ({ date, updateSurveyDate }: DatePickerProps) => {
         <Calendar
           value={value}
           onChange={(date) => onDateChange(date as Date)}
-          minDate={new Date()}
+          minDate={today}
           className="!border-0"
           tileClassName={({ date }: { date: Date }) => {
             const baseClass =
